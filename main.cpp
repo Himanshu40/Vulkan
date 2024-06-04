@@ -4,6 +4,7 @@
 
 #include <iostream>
 #include <vector>
+#include <set>
 #include <stdexcept>
 #include <cstdlib>
 
@@ -22,16 +23,41 @@ private:
 	GLFWwindow* window;
 	VkInstance instance;
 
+	/// <summary>
+	/// checks if all of the extensions returned by glfwGetRequiredInstanceExtensions are included in the supported vulkan extensions list
+	/// </summary>
+	/// <param name="glfwExtensions"></param>
+	/// <param name="glfwExtensionCount"></param>
+	/// <param name="vkExtensions"></param>
+	void checkSupport(const char** glfwExtensions, const uint32_t &glfwExtensionCount, const std::set<std::string> &vkExtensions) {
+		//std::cout << glfwExtensions << std::endl; // prints memory address of the first element in the glfwExtensions array.
+
+		// prints each extension name that belongs to GLFW
+		/*for (uint32_t i = 0; i < glfwExtensionCount; ++i) {
+			std::cout << glfwExtensions[i] << std::endl;
+		}*/
+
+		for (uint32_t i = 0; i < glfwExtensionCount; ++i) {
+			if (vkExtensions.find(glfwExtensions[i]) != vkExtensions.end()) {
+				std::cout << glfwExtensions[i] << std::endl;
+			}
+		}
+	}
+
 	void createInstance() {
 		uint32_t extensionCount = 0;
 		vkEnumerateInstanceExtensionProperties(nullptr, &extensionCount, nullptr);
+		//std::cout << extensionCount << std::endl;
 
 		std::vector<VkExtensionProperties> extensions(extensionCount);
+		vkEnumerateInstanceExtensionProperties(nullptr, &extensionCount, extensions.data());
 	
-		std::cout << "Available extensions:\n";
+		//std::cout << "Available extensions:\n";
 
+		std::set<std::string> vkExtensions;
 		for (const auto& extension : extensions) {
-			std::cout << '\t' << extension.extensionName << '\n';
+			vkExtensions.insert(extension.extensionName);
+			//std::cout << '\t' << extension.extensionName << '\n';
 		}
 
 		VkApplicationInfo appInfo{};
@@ -50,6 +76,7 @@ private:
 		const char** glfwExtensions;
 
 		glfwExtensions = glfwGetRequiredInstanceExtensions(&glfwExtensionCount);
+		checkSupport(glfwExtensions, glfwExtensionCount, vkExtensions);
 		
 		createInfo.enabledExtensionCount = glfwExtensionCount;
 		createInfo.ppEnabledExtensionNames = glfwExtensions;
